@@ -208,10 +208,40 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
 -(void)turnBasedMatchmakerViewController:(GKTurnBasedMatchmakerViewController *)viewController
                       playerQuitForMatch:(GKTurnBasedMatch *)match
 {
+    /*
     //除了playerQuit方法外，其他方法都会移除view controller并打印一些信息。
     //这是因为玩家在退出游戏时也许还想在这个界面做其他事情。
     NSLog(@"player QUIT from Match, %@, %@",
           match, match.currentParticipant);
+    */
+    
+    NSUInteger currentPlayerIndex =
+        [match.participants indexOfObject:match.currentParticipant];
+    
+    //local player has became DEAD, we should find next LIVE player and hand turn over to him.
+    GKTurnBasedParticipant *livePlayer;
+    for (int i = 0; i < [match.participants count]; i++)
+    {
+        livePlayer = [match.participants objectAtIndex:
+                (currentPlayerIndex + 1 + i) % match.participants.count];
+        if (livePlayer.matchOutcome != GKTurnBasedMatchOutcomeQuit)
+        {
+            break;
+        }
+    }
+    
+    if (livePlayer == nil) 
+        return;
+    
+    NSArray* livePlayers = [[NSArray alloc] initWithObjects:livePlayer,nil];
+     
+    NSLog(@"player quit for Match, %@, %@", match, match.currentParticipant);
+    
+    [match participantQuitInTurnWithOutcome:GKTurnBasedMatchOutcomeQuit
+                           nextParticipants:livePlayers
+                                turnTimeout:GKTurnTimeoutDefault
+                                  matchData:match.matchData
+                          completionHandler:nil];
 }
 
 /*

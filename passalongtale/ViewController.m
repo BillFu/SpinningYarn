@@ -106,32 +106,52 @@
     }
     
     NSString *sendString = [NSString stringWithFormat:@"%@ %@",
-                                mainTextController.text, newStoryString];
-    NSData *updatedMatchData = [sendString dataUsingEncoding:NSUTF8StringEncoding ];
+                            mainTextController.text, newStoryString];
+    NSData *data = [sendString dataUsingEncoding:NSUTF8StringEncoding ];
     mainTextController.text = sendString;
     
     NSUInteger currentIndex = [currentMatch.participants
-                               indexOfObject:currentMatch.currentParticipant];
+                                indexOfObject:currentMatch.currentParticipant];
     NSUInteger nextIndex = (currentIndex + 1) % [currentMatch.participants count];
+    GKTurnBasedParticipant *nextParticipant =
+        [currentMatch.participants objectAtIndex:nextIndex];
     
-    GKTurnBasedParticipant *nextParticipant;
-    nextParticipant = [currentMatch.participants objectAtIndex:nextIndex];
+    for (int i = 0; i < [currentMatch.participants count]; i++)
+    {
+        nextParticipant = [currentMatch.participants
+                           objectAtIndex:((currentIndex + 1 + i) %
+                                          [currentMatch.participants count ])];
+        if (nextParticipant.matchOutcome !=
+            GKTurnBasedMatchOutcomeQuit)
+        {
+            break;
+        }
+    }
+    
     NSArray* nextParticipants = [[NSArray alloc] initWithObjects:nextParticipant,nil];
-    
+
     [currentMatch endTurnWithNextParticipants:nextParticipants
-                                  turnTimeout:GKTurnTimeoutDefault
-                                    matchData:updatedMatchData
+                                  turnTimeout:GKExchangeTimeoutDefault
+                                    matchData:data
                             completionHandler:^(NSError *error)
-     {
-         if (error)
-         {
-             NSLog(@"%@", error);
-         }
-     }];
+        {
+            if (error)
+            {
+                NSLog(@"%@", error);
+                statusLabel.text = @"Oops, there was a problem.  Try that again.";
+            }
+            else
+            {
+                statusLabel.text = @"Your turn is over.";
+                textInputField.enabled = NO;
+            }
+        }
+    ];
     
-    NSLog(@"Send Turn, %@, %@", updatedMatchData, nextParticipant);
+    NSLog(@"Send Turn, %@, %@", data, nextParticipant);
     textInputField.text = @"";
     characterCountLabel.text = @"250";
+
     characterCountLabel.textColor = [UIColor blackColor];
 }
 
