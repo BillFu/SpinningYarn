@@ -33,10 +33,7 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
 
 #pragma mark User functions
 
-- (void)authenticationChanged
-{
-    
-}
+
 /*
  Once you set an authentication handler, Game Kit automatically authenticates
  the player asynchronously, calling your authentication handler as necessary to complete the process.Each
@@ -89,12 +86,12 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
                 }
              ];
             */
-            //[self authenticatedPlayer: localPlayer];
+            [delegate authenticationChanged:YES];
         }
         else
         {
             //If the authentication process failed
-            //[self disableGameCenter];
+            [delegate authenticationChanged:NO];
         }
     };
     

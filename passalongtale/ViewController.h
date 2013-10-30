@@ -26,6 +26,7 @@
     IBOutlet UITextField    *textInputField;
     IBOutlet UILabel        *characterCountLabel;
     IBOutlet UILabel        *statusLabel;
+    IBOutlet UIButton       *gameCenterButton;
 }
 
 - (void) animateTextField: (UITextField*) textField up: (BOOL) up;

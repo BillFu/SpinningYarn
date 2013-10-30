@@ -31,12 +31,22 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
 	// Do any additional setup after loading the view, typically from a nib.
-    textInputField.delegate = self;
-    textInputField.enabled = NO;
-    statusLabel.text = @"Welcome. Press Game Center to get started";
-
     [GCTurnBasedMatchHelper sharedInstance].delegate = self;
+    
+    textInputField.delegate = self;
+
+    GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
+    if(localPlayer.isAuthenticated == NO)
+    {
+        [self authenticationChanged:NO];
+    }
+    else
+    {
+        textInputField.enabled = NO;
+        statusLabel.text = @"Welcome. Press Game Center to get started";
+    }
 }
 
 - (void)viewDidUnload
@@ -108,8 +118,14 @@
     NSString *sendString = [NSString stringWithFormat:@"%@ %@",
                             mainTextController.text, newStoryString];
     NSData *data = [sendString dataUsingEncoding:NSUTF8StringEncoding ];
+    //canchedOldStory used to rollback in case of failing to send out data
+    NSString *canchedOldStory = [mainTextController.text copy];
     mainTextController.text = sendString;
     
+    textInputField.text = @"";
+    characterCountLabel.text = @"250";
+    
+    characterCountLabel.textColor = [UIColor blackColor];
     NSUInteger currentIndex = [currentMatch.participants
                                 indexOfObject:currentMatch.currentParticipant];
     NSUInteger nextIndex = (currentIndex + 1) % [currentMatch.participants count];
@@ -138,7 +154,8 @@
             if (error)
             {
                 NSLog(@"%@", error);
-                statusLabel.text = @"Oops, there was a problem.  Try that again.";
+                statusLabel.text = @"Error, check Network and Game Center. then Try again";
+                mainTextController.text = canchedOldStory;
             }
             else
             {
@@ -149,10 +166,6 @@
     ];
     
     NSLog(@"Send Turn, %@, %@", data, nextParticipant);
-    textInputField.text = @"";
-    characterCountLabel.text = @"250";
-
-    characterCountLabel.textColor = [UIColor blackColor];
 }
 
 - (IBAction)updateCount:(id)sender {
@@ -174,6 +187,29 @@
 }
 
 #pragma mark - Methods declared in Protocol of GCTurnBasedMatchHelperDelegate
+- (void)authenticationChanged:(BOOL)successFlag
+{
+    if (successFlag)
+    {
+        if([GCTurnBasedMatchHelper sharedInstance].currentMatch != nil)
+        {
+            statusLabel.text = @"Continue game or Press Game Center";
+            gameCenterButton.enabled = YES;
+        }
+        else  //No match started still, just a beginner.
+        {
+            textInputField.enabled = NO;
+            statusLabel.text = @"Welcome. Press Game Center to get started";
+            gameCenterButton.enabled = YES;
+        }
+    }
+    else //failed to anthenticate local player
+    {
+        textInputField.enabled = NO;
+        statusLabel.text = @"Please wait Authentication finished.";
+        gameCenterButton.enabled = NO;
+    }
+}
 
 -(void)enterNewGame:(GKTurnBasedMatch *)match
 {
@@ -272,6 +308,7 @@
     [textInputField release];
     [characterCountLabel release];
     [statusLabel release];
+    [gameCenterButton release];
     [super dealloc];
 }
 @end

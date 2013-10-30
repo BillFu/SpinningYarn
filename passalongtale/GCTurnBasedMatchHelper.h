@@ -10,6 +10,9 @@
 #import <GameKit/GameKit.h>
 
 @protocol GCTurnBasedMatchHelperDelegate
+
+- (void)authenticationChanged:(BOOL)successFlag;
+
 /*
  当通过didFindMatch方法弹出一个新游戏时，我们想在屏幕显示一个“Once upon a time”的初始字符串。
  */
@@ -59,7 +62,6 @@
 + (GCTurnBasedMatchHelper *)sharedInstance;
 
 - (void)authenticateLocalUser;
-- (void)authenticationChanged;
 
 - (void)findMatchWithMinPlayers:(int)minPlayers
                      maxPlayers:(int)maxPlayers

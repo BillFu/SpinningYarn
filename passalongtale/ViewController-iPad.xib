@@ -6,6 +6,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
+                <outlet property="gameCenterButton" destination="l6j-P0-rLZ" id="Idu-ik-x22"/>
                 <outlet property="inputView" destination="ztg-wA-bfp" id="MgV-c4-SLY"/>
                 <outlet property="mainTextController" destination="Bhh-l5-dIk" id="S1x-wV-P1d"/>
                 <outlet property="statusLabel" destination="Alx-c8-utH" id="jPc-bM-Hio"/>
