@@ -51,13 +51,13 @@
 
 - (void)viewDidUnload
 {
-    [mainTextController release];
+    //[mainTextController release];
     mainTextController = nil;
-    [inputView release];
+    //[inputView release];
     inputView = nil;
-    [textInputField release];
+    //[textInputField release];
     textInputField = nil;
-    [characterCountLabel release];
+    //[characterCountLabel release];
     characterCountLabel = nil;
     [super viewDidUnload];
     // Release any retained subviews of the main view.
@@ -76,7 +76,8 @@
     [self animateTextField: textField up: NO];
 }
 
-- (BOOL)textFieldShouldReturn:(UITextField *)theTextField {
+- (BOOL)textFieldShouldReturn:(UITextField *)theTextField
+{
     [theTextField resignFirstResponder];
     return YES;
 }
@@ -128,24 +129,20 @@
     characterCountLabel.textColor = [UIColor blackColor];
     NSUInteger currentIndex = [currentMatch.participants
                                 indexOfObject:currentMatch.currentParticipant];
-    NSUInteger nextIndex = (currentIndex + 1) % [currentMatch.participants count];
-    GKTurnBasedParticipant *nextParticipant =
-        [currentMatch.participants objectAtIndex:nextIndex];
     
+    GKTurnBasedParticipant *nextParticipant;
     for (int i = 0; i < [currentMatch.participants count]; i++)
     {
-        nextParticipant = [currentMatch.participants
-                           objectAtIndex:((currentIndex + 1 + i) %
-                                          [currentMatch.participants count ])];
-        if (nextParticipant.matchOutcome !=
-            GKTurnBasedMatchOutcomeQuit)
+        NSUInteger nextIndex = (currentIndex + 1 + i) %
+                                [currentMatch.participants count];
+        nextParticipant = [currentMatch.participants objectAtIndex:nextIndex];
+        if (nextParticipant.matchOutcome != GKTurnBasedMatchOutcomeQuit)
         {
             break;
         }
     }
     
     NSArray* nextParticipants = [[NSArray alloc] initWithObjects:nextParticipant,nil];
-
     [currentMatch endTurnWithNextParticipants:nextParticipants
                                   turnTimeout:GKExchangeTimeoutDefault
                                     matchData:data
@@ -165,17 +162,21 @@
         }
     ];
     
-    NSLog(@"Send Turn, %@, %@", data, nextParticipant);
+    NSLog(@"Send Turn to %@", nextParticipant.playerID);
 }
 
-- (IBAction)updateCount:(id)sender {
+- (IBAction)updateCount:(id)sender
+{
     UITextField *tf = (UITextField *)sender;
     int len = [tf.text length];
     int remain = 250 - len;
     characterCountLabel.text = [NSString stringWithFormat:@"%d", remain];
-    if (remain < 0) {
+    if (remain < 0)
+    {
         characterCountLabel.textColor = [UIColor redColor];
-    } else {
+    }
+    else
+    {
         characterCountLabel.textColor = [UIColor blackColor];
     }
 }
@@ -270,7 +271,13 @@
 - (void)sendNotice:(NSString *)notice
           forMatch:(GKTurnBasedMatch *)match
 {
-    
+    UIAlertView *av = [[UIAlertView alloc] initWithTitle:
+                                                @"Another Game Updated!"
+                                                 message:notice
+                                                delegate:self
+                                       cancelButtonTitle:@"Sweet!"
+                                       otherButtonTitles:nil];
+    [av show];
 }
 
 #pragma mark - View lifecycle -- Second Part
@@ -301,14 +308,4 @@
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
-- (void)dealloc {
-   
-    [mainTextController release];
-    [inputView release];
-    [textInputField release];
-    [characterCountLabel release];
-    [statusLabel release];
-    [gameCenterButton release];
-    [super dealloc];
-}
 @end

@@ -48,8 +48,13 @@
           forMatch:(GKTurnBasedMatch *)match;
 @end
 
-@interface GCTurnBasedMatchHelper: NSObject<GKTurnBasedMatchmakerViewControllerDelegate>
-@property (nonatomic, retain) id <GCTurnBasedMatchHelperDelegate> delegate;
+@interface GCTurnBasedMatchHelper: NSObject<GKTurnBasedMatchmakerViewControllerDelegate,
+                                            GKLocalPlayerListener>
+{
+    UIViewController *presentingViewController;
+}
+
+@property (nonatomic, weak) id <GCTurnBasedMatchHelperDelegate> delegate;
 
 @property (assign) BOOL userAuthenticated;
 
@@ -57,7 +62,7 @@
 // that occured while using the Game Center API's
 @property (nonatomic, readonly) NSError* lastError;
 
-@property (retain) GKTurnBasedMatch * currentMatch;
+@property (strong)GKTurnBasedMatch * currentMatch;
 
 + (GCTurnBasedMatchHelper *)sharedInstance;
 

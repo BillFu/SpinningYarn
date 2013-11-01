@@ -8,16 +8,7 @@
 
 #import "GCTurnBasedMatchHelper.h"
 
-@interface GCTurnBasedMatchHelper()
-{
-    UIViewController *presentingViewController;
-}
-@end
-
 @implementation GCTurnBasedMatchHelper
-
-@synthesize currentMatch;
-@synthesize delegate;
 
 #pragma mark Initialization
 
@@ -68,7 +59,7 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
             //    your app.
             [self presentViewController:viewController];
         }
-        else if (localPlayer.isAuthenticated)
+        else if ([GKLocalPlayer localPlayer].isAuthenticated)
         {
             //If the authentication process succeeded,
             //authenticatedPlayer: is an example method name. Create your own
@@ -86,12 +77,15 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
                 }
              ];
             */
-            [delegate authenticationChanged:YES];
+            NSLog(@"Local Player ID: %@", [GKLocalPlayer localPlayer].playerID);
+
+            [[GKLocalPlayer localPlayer] registerListener:self];
+            [self.delegate authenticationChanged:YES];
         }
         else
         {
             //If the authentication process failed
-            [delegate authenticationChanged:NO];
+            [self.delegate authenticationChanged:NO];
         }
     };
     
@@ -182,7 +176,7 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
     if (firstParticipant.lastTurnDate == nil)
     {
         //NSLog(@"new Match started");
-        [delegate enterNewGame:match];
+        [self.delegate enterNewGame:match];
 
     }
     else
@@ -192,12 +186,12 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
              isEqualToString:[GKLocalPlayer localPlayer].playerID])
         {
             // It's your turn!
-            [delegate takeTurn:match];
+            [self.delegate takeTurn:match];
         }
         else
         {
             // It's not your turn, just display the game state.
-            [delegate layoutMatch:match];
+            [self.delegate layoutMatch:match];
         }
     }
 }
@@ -253,4 +247,113 @@ static GCTurnBasedMatchHelper *sharedHelper = nil;
  }
  }
  */
+
+#pragma mark methods declared in the Protocol of GKLocalPlayerListener
+
+//Handling Exchanges
+- (void)player:(GKPlayer *)player
+receivedExchangeCancellation:(GKTurnBasedExchange *)exchange
+      forMatch:(GKTurnBasedMatch *)match
+{
+}
+
+- (void)player:(GKPlayer *)player
+receivedExchangeReplies:(NSArray *)replies
+forCompletedExchange:(GKTurnBasedExchange *)exchange
+      forMatch:(GKTurnBasedMatch *)match
+{
+}
+
+- (void)player:(GKPlayer *)player
+receivedExchangeRequest:(GKTurnBasedExchange *)exchange
+      forMatch:(GKTurnBasedMatch *)match
+{
+}
+//----Handling Match Related Events----
+//see 506.pdf doucument
+- (void)player:(GKPlayer *)player
+receivedTurnEventForMatch:(GKTurnBasedMatch *)match
+didBecomeActive:(BOOL)didBecomeActive
+{
+    // This event activated the application. This means that the user
+    // tapped on the notification banner and wants to see or play this
+    // match now.
+    if (didBecomeActive)
+    {
+        // ??? [self switchToMatch:match];
+        NSLog(@"return from didBecomeActive branch in receivedTurnEventForMatch");
+        return;  //Notice here
+    }
+    
+    
+    NSLog(@"run second part from in receivedTurnEventForMatch");
+
+    //Match updated
+    // Handle the event more selectively
+    if ([match.matchID isEqualToString:self.currentMatch.matchID])
+    {
+        // This is the match the user is currently playing,
+        // update to show the latest state
+        // ??? [self refreshMatch:match];
+        if ([match.currentParticipant.playerID
+             isEqualToString:[GKLocalPlayer localPlayer].playerID])
+        {
+            // it's the current match and it's our turn now
+            self.currentMatch = match;
+            [self.delegate takeTurn:match];
+        }
+        else
+        {
+            // it's the current match, but it's someone else's turn
+            self.currentMatch = match;
+            [self.delegate layoutMatch:match];
+        }
+    }
+    else  //Turn received for different match
+    {
+        // It became the player’s turn in a different match
+        if ([match.currentParticipant.playerID
+             isEqualToString:[GKLocalPlayer localPlayer].playerID])
+        {
+            // it's not the current match and it's our turn now
+            [self.delegate sendNotice:@"It's your turn for another match"
+                        forMatch:match];
+        }
+        else
+        {
+            // it's the not current match, and it's someone else's
+            // turn
+        }
+    }
+}
+
+/*
+// Triggered by the user choosing to play with a friend from Game Center
+- (void)player: (GKPlayer *)player
+didRequestMatchWithPlayers: (NSArray *)playerIDsToInvite
+{
+    // Set up match request
+    GKMatchRequest *request = [[GKMatchRequest alloc] init];
+    request.minPlayers = 2;
+    request.maxPlayers = 2;
+    request.playersToInvite = playerIDsToInvite;
+    request.inviteMessage = @”Let’s play”;
+    // Use the request to find or create a new match
+    [GKTurnBasedMatch findMatchForRequest: request
+                    withCompletionHandler: ^(GKTurnBasedMatch *match,
+                                             NSError *error) { ... }];
+}
+*/
+
+- (void)player:(GKPlayer *)player
+didRequestMatchWithPlayers:(NSArray *)playerIDsToInvite
+{
+    
+}
+
+- (void)player:(GKPlayer *)player
+    matchEnded:(GKTurnBasedMatch *)match
+{
+    
+}
 @end
